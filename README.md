@@ -1,3 +1,2 @@
 # SAS
-SAS程序
-These macros is created by for study ！
+本仓库是一些自己制作的SAS宏！
