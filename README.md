@@ -18,3 +18,5 @@
 ## 导入excel文件  
   + [import_excel](import_excel.sas)  
     导入一个目录下所有的excel(xls,xlsx)文件
+  + [import_sheets](import_sheets.sas)  
+    导入一个excel文件下指定sheet的指定范围
