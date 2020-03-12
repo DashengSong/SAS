@@ -1,12 +1,12 @@
 
-/*ºáÏòºÏ²¢Ã¿¸ö±äÁ¿µÄÃèÊöºÍÍ³¼ÆÁ¿*/
+/*æ¨ªå‘åˆå¹¶æ¯ä¸ªå˜é‡çš„æè¿°å’Œç»Ÿè®¡é‡*/
 %macro data_merge(out,d1,d2);
 data &out;
 merge &d1 &d2;
 run;
 %mend;
 
-/*ºÏ²¢Ã¿¸ö±í*/
+/*åˆå¹¶æ¯ä¸ªè¡¨*/
 %macro data_stack();
 data final;
 %if &grp ne %then %do;
@@ -26,17 +26,17 @@ run;
 %mend;
 
 
-/*ÉèÖÃÏÔÊ¾*/
+/*è®¾ç½®æ˜¾ç¤º*/
 %macro display_table();
 ods escapechar="^";
 %if &grp ne %then %do;
 proc sql noprint;
 select count(&grp) into :grp_num separated by "|" 
-	from &ds where &grp ne "" 
+	from &ds where &grp is not null
 		group by &grp;
 quit;
 %end;
-/*¶¨ÒåÏÔÊ¾ÑùÊ½*/
+/*å®šä¹‰æ˜¾ç¤ºæ ·å¼*/
 proc template;
 	define style styles.myjournal;
 	parent=styles.journal;
@@ -64,10 +64,10 @@ proc template;
 run;
 %if &filetype ne %str() and &filename ne %str() %then
 ods &filetype file="&filename..&filetype" style=myjournal;
-%else %put ÄúÃ»ÓĞÊäÈëÎÄ¼şÂ·¾¶/ÎÄ¼şÃû/ÎÄ¼şÀàĞÍ£¬Òò´Ë²»»áÊä³öÎÄ¼ş ;;
-/*ÉèÖÃÏÔÊ¾*/
+%else %put æ‚¨æ²¡æœ‰è¾“å…¥æ–‡ä»¶è·¯å¾„/æ–‡ä»¶å/æ–‡ä»¶ç±»å‹ï¼Œå› æ­¤ä¸ä¼šè¾“å‡ºæ–‡ä»¶ ;;
+/*è®¾ç½®æ˜¾ç¤º*/
 proc report data=final split='/' ;
-/*ÉèÖÃ·Ç¼òµ¥ÃèÊö*/
+/*è®¾ç½®éç®€å•æè¿°*/
 %if &grp ne %str() %then %do;
 define variables /display style(header)=[verticalalign=middle] style(column)=[textalign=center] "Variables" ;
 define level     /display left "" style(column)=[textalign=left];
@@ -85,7 +85,7 @@ define pvalue    /display right style(header)=[fontstyle=italic verticalalign=mi
 %end;
 column variables level %if &row_total=T %then row_overall; col: pvalue;
 %end;
-/*ÉèÖÃ¼òµ¥ÃèÊö*/
+/*è®¾ç½®ç®€å•æè¿°*/
 %else %do;
 define variables /display left "Variables" style(column)=[textalign=center] style(header)=[verticalalign=middle];
 define level     /display left "" style(column)=[textalign=left];	
@@ -100,7 +100,7 @@ run;
 %if &filetype ne %str() and &filename ne %str() %then
 ods &filetype close;
 %mend;
-/*É¾³ı¹ı³ÌÖĞµÄÊı¾İ¼¯*/
+/*åˆ é™¤è¿‡ç¨‹ä¸­çš„æ•°æ®é›†*/
 %macro kill();
 proc datasets mt=data;
 save final &ds;
