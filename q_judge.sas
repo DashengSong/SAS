@@ -1,6 +1,6 @@
 %macro q_judge();
-%put ÏÖÔÚÅĞ¶ÏµÄ¶¨Á¿±äÁ¿ÊÇ: &str ;
-/*ÕıÌ¬ĞÔÅĞ¶Ï*/
+%put ç°åœ¨åˆ¤æ–­çš„å®šé‡å˜é‡æ˜¯: &str ;
+/*æ­£æ€æ€§åˆ¤æ–­*/
 proc univariate data=&ds normal;
 class &grp ;
 var &str ;
@@ -14,7 +14,7 @@ quit;
 %if &n_p >=1 %then 
 	%npar(q);
 %else 
-/*·½²îÆëĞÔ·ÖÎö*/
+/*æ–¹å·®é½æ€§åˆ†æ*/
 	%do;
 		proc glm data=&ds ;
 		class &grp ;
@@ -25,7 +25,7 @@ quit;
 		quit;
 		ods output close;
 		proc sql noprint;
-		select count(*) into :n_h from &hov_&q_id where probf<0.05;
+		select count(*) into :n_h from hov_&q_id where probf<0.05;
 		quit;
 		%if &n_h = 0 and &n_level_grp =2 %then %ttest(equal=T) ;
 		%else %if &n_h=0 and &n_level_grp > 2 %then %f_test();
