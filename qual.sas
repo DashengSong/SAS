@@ -1,12 +1,12 @@
-/*t_¼ìÑé*/
+/*t_æ£€éªŒ*/
 %macro t_test(equal=T);
 %if &equal=T %then 
-%put &str Ê¹ÓÃµÄÊÇT¼ìÑé(·½²îÆë);
-%else %put &str Ê¹ÓÃµÄÊÇµ÷ÕûºóT¼ìÑé;
+%put &str ä½¿ç”¨çš„æ˜¯Tæ£€éªŒ(æ–¹å·®é½);
+%else %put &str ä½¿ç”¨çš„æ˜¯è°ƒæ•´åTæ£€éªŒ;
 proc ttest data=&ds;
 class &grp ;
 var &str ;
-ods output ttests=t_&q_id(where=(variances=%if &equal=T %then "µÈÓÚ";%else "²»µÈÓÚ";) 
+ods output ttests=t_&q_id(where=(variances=%if &equal=T %then "ç­‰äº";%else "ä¸ç­‰äº";) 
 					  		keep=variances probt);
 ods select ttests;
 run;
@@ -19,9 +19,9 @@ drop probt ;
 run;
 %data_merge(qal_&q_id,freq_table_&q_id,t_&q_id);
 %mend;
-/*·½²î·ÖÎö*/
+/*æ–¹å·®åˆ†æ*/
 %macro ftest();
-%put &str Ê¹ÓÃµÄÊÇ·½²î·ÖÎö£¡;
+%put &str ä½¿ç”¨çš„æ˜¯æ–¹å·®åˆ†æï¼;
 proc glm data=&ds;
 class &grp ;
 model &str = &grp;
@@ -38,18 +38,21 @@ drop probf;
 run;
 %data_merge(qal_&q_id,desc_&q_id,ftest_&q_id);
 %mend;
-/*·Ç²ÎÊı¼ìÑé*/
+/*éå‚æ•°æ£€éªŒ*/
 %macro npar(type);
 proc npar1way data=&ds wilcoxon;
 class &grp ;
 var &str ;
 %if &n_level_grp=2 %then %do;
-%put &str Ê¹ÓÃµÄÊÇWilcoxon¼ìÑé£¡;
+%put &str ä½¿ç”¨çš„æ˜¯Wilcoxonæ£€éªŒï¼;
+%if %sysfunc(find(&sysvlong,M6)) %then
 ods output wilcoxonTest=&type._npar_&&&type._id (keep=Prob2 );
+%else 
+ods output wilcoxonTest=&type._npar_&&&type._id (keep=cvalue1);;
 ods select wilcoxonTest ;
 %end;
 %else %do;
-%put &str Ê¹ÓÃµÄÊÇ Kruskal-Wallis ¼ìÑé£¡;
+%put &str ä½¿ç”¨çš„æ˜¯ Kruskal-Wallis æ£€éªŒï¼;
 ods output KruskalWallisTest=&type._npar_&&&type._id (keep=prob );
 ods select KruskalWallisTest;
 %end;
