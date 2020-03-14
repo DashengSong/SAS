@@ -82,14 +82,13 @@
 	level=put(&str,$20.);
 	drop &str ;
 	run;
-	
 	/*调用judge宏判断分析方法*/
 	%cat_judge();
 	%end;
 	%else %do;
 	data one_way_&cat_id;
 	set one_way_&cat_id;
-	stat=frequency||"("||compress(put(percent,32.2))||")";
+	stat=compress(put(percent,32.&dec)||"("||put(percent,32.&dec)||")");
 	drop frequency percent &str cum: ;
 	label f_&str="level";
 	rename f_&str=level;
@@ -115,7 +114,7 @@
 		/*定量变量描述*/
 		%let str=%scan(&num_list,&q_id,|);
     	%put --------------开始处理&str---------------------;
-		proc means data=&ds mean std min max median qrange %if &miss=T %then nmiss; ;
+		proc means data=&ds mean std min max median qrange %if &miss=T %then nmiss; uclm lclm alpha=&alpha;
 		var &str ;
 		%if &grp ne %then class &grp ;;
 		ods output summary=desc_&q_id;
@@ -124,9 +123,11 @@
 		ods output close;
 		data desc_&q_id;
 		set desc_&q_id;
-		m_iqr=compress(put(&str._median,32.2)||"("||put(&str._qrange,32.2)||")");
-		m_std=compress(put(&str._mean,32.2)||unicode("&#177;","ncr")||put(&str._StdDev,32.2));
-		drop &str._mean &str._qrange &str._stddev &str._median ;
+		m_minmax=compress(put(&str._min,32.&dec)||","||put(&str._max,32.&dec));
+		m_iqr=compress(put(&str._median,32.&dec)||"("||put(&str._qrange,32.&dec)||")");
+		m_std=compress(put(&str._mean,32.&dec)||unicode("&#177;","ncr")||put(&str._StdDev,32.&dec));
+		m_cl=compress(put(&str._lclm,32.&dec)||unicode("&#126;","ncr")||put(&str._uclm,32.&dec));
+		drop &str._mean &str._qrange &str._stddev &str._median &str._min &str._max &str._lclm &str._uclm;
 		run;
 		%if &grp ne %then %do;
 		data temp;
@@ -147,11 +148,12 @@
 		drop i;
 		select ;
 		when (_name_="NObs") _name_="N";
-		%if &miss=T %then when (_name_="&str._NMiss") _name_="Missing";
-		when (find(_name_,"Min")) _name_="Min";
-		when (find(_name_,"Max"))_name_="Max";
+		%if &miss=T %then when (_name_="&str._NMiss") _name_="Missing";;
+		when (find(_name_,"minmax")) _name_="Min,Max";
 		when (find(_name_,"m_iqr"))_name_="Median(IQR)";
 		when (find(_name_,"m_std"))_name_="Mean"||unicode("&#177;","ncr")||"Std";
+		when (find(_name_,"m_iqr"))_name_="Median(IQR)";
+		when (find(_name_,"m_cl"))_name_="CI";
 		otherwise _name_="";
 		end;
 		rename _name_=level;
@@ -184,12 +186,13 @@
 		set o_desc_&q_id;
 		rename col1=row_overall ;
 		select;
-		when (find(_name_,"N")) _name_="N";
-		%if &miss=T %then when (find(_name_,"NMiss")) _name_="Miss";
-		when (find(_name_,"Min")) _name_="Min";
-		when (find(_name_,"Max"))_name_="Max";
+		when (_name_="NObs") _name_="N";
+		%if &miss=T %then when (_name_="&str._NMiss") _name_="Missing";;
+		when (find(_name_,"minmax")) _name_="Min,Max";
 		when (find(_name_,"m_iqr"))_name_="Median(IQR)";
 		when (find(_name_,"m_std"))_name_="Mean"||unicode("&#177;","ncr")||"Std";
+		when (find(_name_,"m_iqr"))_name_="Median(IQR)";
+		when (find(_name_,"m_cl"))_name_="CI";
 		otherwise _name_="";
 		end;
 		rename _name_=level;
@@ -212,15 +215,17 @@
 			by descending variables ;
 			run;
 			data desc_&q_id ;
-			set desc_&q_id;
+			length _name_ $20;
+			set desc_&q_id(drop=_label_);
 			rename col1=stat ;
 			select ;
 			when (_name_="NObs") _name_="N";
-			%if &miss=T %then when (find(_name_,"NMiss")) _name_="Miss";;
-			when (find(_name_,"Min")) _name_="Min";
-			when (find(_name_,"Max"))_name_="Max";
+			%if &miss=T %then when (_name_="&str._NMiss") _name_="Missing";;
+			when (find(_name_,"minmax")) _name_="Min,Max";
 			when (find(_name_,"m_iqr"))_name_="Median(IQR)";
 			when (find(_name_,"m_std"))_name_="Mean"||unicode("&#177;","ncr")||"Std";
+			when (find(_name_,"m_iqr"))_name_="Median(IQR)";
+			when (find(_name_,"m_cl"))_name_="CI";
 			otherwise _name_="";
 			end;
 			rename _name_=level;
