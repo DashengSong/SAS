@@ -1,12 +1,12 @@
 
-/*æ¨ªå‘åˆå¹¶æ¯ä¸ªå˜é‡çš„æè¿°å’Œç»Ÿè®¡é‡*/
+/*ºáÏòºÏ²¢Ã¿¸ö±äÁ¿µÄÃèÊöºÍÍ³¼ÆÁ¿*/
 %macro data_merge(out,d1,d2);
 data &out;
 merge &d1 &d2;
 run;
 %mend;
 
-/*åˆå¹¶æ¯ä¸ªè¡¨*/
+/*ºÏ²¢Ã¿¸ö±í*/
 %macro data_stack();
 data final;
 %if &grp ne %then %do;
@@ -26,7 +26,7 @@ run;
 %mend;
 
 
-/*è®¾ç½®æ˜¾ç¤º*/
+/*ÉèÖÃÏÔÊ¾*/
 %macro display_table();
 ods escapechar="^";
 %if &grp ne %then %do;
@@ -36,23 +36,21 @@ select count(&grp) into :grp_num separated by "|"
 		group by &grp;
 quit;
 %end;
-/*å®šä¹‰æ˜¾ç¤ºæ ·å¼*/
+/*¶¨ÒåÏÔÊ¾ÑùÊ½*/
 proc template;
 	define style styles.myjournal;
 	parent=styles.journal;
 	style fonts from fonts/
-		'docFont'=("Arial",4)
-		'headingFont'=("Arial",5,Bold)
-		'titlefont'=("Arial",5);
+		'docFont'=("&font",&size)
+		'headingFont'=("&font",&size,Bold)
+		'titlefont'=("&font",&size);
 	style data from cell/
 		verticalalign=middle
-		textalign=right
+		textalign= right
 		font=Fonts('DocFont');
 	style body from body /
 		marginright = 0.5                                                      
         marginleft = 0.5;  
-	style systitleandfootercontainer from container/
-		font=("Microsoft YaHei UI",8);
 	style Output from Container /                                           
          bordercolor = black                                         
          borderwidth = 3                                                      
@@ -64,33 +62,32 @@ proc template;
 run;
 %if &filetype ne %str() and &filename ne %str() %then
 ods &filetype file="&filename..&filetype" style=myjournal;
-%else %put æ‚¨æ²¡æœ‰è¾“å…¥æ–‡ä»¶è·¯å¾„/æ–‡ä»¶å/æ–‡ä»¶ç±»å‹ï¼Œå› æ­¤ä¸ä¼šè¾“å‡ºæ–‡ä»¶ ;;
-/*è®¾ç½®æ˜¾ç¤º*/
-proc report data=final split='/' ;
-/*è®¾ç½®éç®€å•æè¿°*/
+%else %put ÄúÃ»ÓĞÊäÈëÎÄ¼şÂ·¾¶/ÎÄ¼şÃû/ÎÄ¼şÀàĞÍ£¬Òò´Ë²»»áÊä³öÎÄ¼ş ;;
+/*ÉèÖÃÏÔÊ¾*/
+proc report data=final split='/';
+/*ÉèÖÃ·Ç¼òµ¥ÃèÊö*/
 %if &grp ne %str() %then %do;
-define variables /display style(header)=[verticalalign=middle] style(column)=[textalign=center] "Variables" ;
+define variables /display style(header)=[verticalalign=middle] style(column)=[textalign=center] "&row_lab" ;
 define level     /display left "" style(column)=[textalign=left];
-%if &row_total=T %then define row_overall /display right "Overall" style(header)=[verticalalign=middle textalign=center];;
+%if &row_total=T %then define row_overall /display &col_align "Overall" style(header)=[verticalalign=middle textalign=center];;
 define pvalue    /display right style(header)=[fontstyle=italic verticalalign=middle ] "P";
 %if %length(&col_lab)>0 %then %do;
 	%do ncol=1 %to &n_level_grp;
-		define col&ncol /display right "%scan(&col_lab,&ncol,|)/(N=%scan(&grp_num,&ncol,|))";
+		define col&ncol /display &col_align "%scan(&col_lab,&ncol,|)/(N=%scan(&grp_num,&ncol,|))";
 	%end;
 %end;
 %else %do;
 	%do ncol=1 %to &n_level_grp;
-		define col&ncol /display right "&ncol/(N=%scan(&grp_num,&ncol,|))";
+		define col&ncol /display &col_align "&ncol/(N=%scan(&grp_num,&ncol,|))";
 	%end;
 %end;
 column variables level %if &row_total=T %then row_overall; col: pvalue;
 %end;
-/*è®¾ç½®ç®€å•æè¿°*/
+/*ÉèÖÃ¼òµ¥ÃèÊö*/
 %else %do;
 define variables /display left "Variables" style(column)=[textalign=center] style(header)=[verticalalign=middle];
 define level     /display left "" style(column)=[textalign=left];	
 %if &row_total=T %then define row_overall /display right "Overall" style(column)=[textalign=left] style(header)=[verticalalign=middle];;
-define pvalue    /display right "^{style [fontstyle=itlaic] P}" style(header)=[verticalalign=middle];
 define stat      /display right "Statistics" style(header)=[verticalalign=middle textalign=center];
 column variables level %if &row_total=T %then row_overall; stat;
 %end;
@@ -100,7 +97,7 @@ run;
 %if &filetype ne %str() and &filename ne %str() %then
 ods &filetype close;
 %mend;
-/*åˆ é™¤è¿‡ç¨‹ä¸­çš„æ•°æ®é›†*/
+/*É¾³ı¹ı³ÌÖĞµÄÊı¾İ¼¯*/
 %macro kill();
 proc datasets mt=data;
 save final &ds;
