@@ -1,12 +1,11 @@
 /*chisq*/
 %macro chisq(adj=F);
 %if &adj eq F %then 
-%put &str Ê¹ÓÃµÄ·ÖÎö·½·¨ÊÇ¿¨·½(Î´µ÷Õû);
-%else %put &str Ê¹ÓÃµÄÊÇµ÷Õûºó¿¨·½;
+%put &str ä½¿ç”¨çš„åˆ†ææ–¹æ³•æ˜¯å¡æ–¹(æœªè°ƒæ•´);
+%else %put &str ä½¿ç”¨çš„æ˜¯è°ƒæ•´åå¡æ–¹;
 proc freq data=&ds;
 table &str * &grp /chisq ;
-ods output chisq=chisq_&cat_id(where=(Statistic=%if &adj=F %then "¿¨·½"; 
-							  %else "Á¬Ğøµ÷Õû¿¨·½";) keep=statistic prob);
+ods output chisq=chisq_&cat_id(where=(Statistic=%if &adj=F %then "å¡æ–¹"; %else "è¿ç»­è°ƒæ•´å¡æ–¹";) keep=statistic prob);
 ods select chisq ;
 run;
 ods output close;
@@ -19,7 +18,7 @@ run;
 %mend;
 /*fisher*/
 %macro fisher();
-%put &str Ê¹ÓÃµÄÊÇFisherÈ·ÇĞ¸ÅÂÊ·¨!;
+%put &str ä½¿ç”¨çš„æ˜¯Fisherç¡®åˆ‡æ¦‚ç‡æ³•!;
 proc freq data=&ds ;
 table &str * &grp ;
 exact fisher;
@@ -36,7 +35,7 @@ run;
 %mend;
 /*CA*/
 %macro ca_test();
-%put &str Ê¹ÓÃµÄÊÇCAÇ÷ÊÆ¼ìÑé;
+%put &str ä½¿ç”¨çš„æ˜¯CAè¶‹åŠ¿æ£€éªŒ;
 proc freq data=&ds;
 table &str*&grp /trend;
 ods output trendtest=trend_&cat_id(where=(Name1="P2_TREND" keep=cvalue1));
@@ -52,7 +51,7 @@ run;
 %mend;
 /*match*/
 %macro match_test();
-%put &str Ê¹ÓÃµÄÊÇÅä¶Ô¼ìÑé(¶Ô³ÆĞÔ¼ìÑé);
+%put &str ä½¿ç”¨çš„æ˜¯é…å¯¹æ£€éªŒ(å¯¹ç§°æ€§æ£€éªŒ);
 proc freq data=&ds;
 table &str * &grp /agree;
 %if &n_level_grp = 2 %then %do;
@@ -75,7 +74,7 @@ run;
 %mend;
 /*kappa*/
 %macro agree();
-%put &str Ê¹ÓÃµÄÊÇKappa£¡;
+%put &str ä½¿ç”¨çš„æ˜¯Kappaï¼;
 proc freq data=&ds;
 table &str * &grp /agree;
 ods output kappaStatistics=kappa_&cat_id(keep=Value);
