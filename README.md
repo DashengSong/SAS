@@ -22,6 +22,10 @@
     导入一个excel文件下指定sheet的指定范围
 ## 数据清洗宏
   + [clean](clean.sas)   
+    数据清洗总宏，负责调用其他宏，并且制定展示样式   
   + [show_miss](show_miss.sas)  
+    筛选缺失值信息  
   + [get_outlier](get_outlier.sas)  
+    筛选异常值信息  
+    
  
