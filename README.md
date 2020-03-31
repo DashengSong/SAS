@@ -20,3 +20,8 @@
     导入一个目录下所有的excel(xls,xlsx)文件
   + [import_sheets](import_sheets.sas)  
     导入一个excel文件下指定sheet的指定范围
+## 数据清洗宏
+  + [clean](clean.sas)   
+  + [show_miss](show_miss.sas)  
+  + [get_outlier](get_outlier.sas)  
+ 
