@@ -19,8 +19,7 @@
 参数说明
 
 1.输入输出相关参数
-saspath： 			存放SAS宏的文件夹路径	
-filetype：			要输出的结果文件的类型，可选pdf/rtf											
+filetype：			要输出的结果文件的类型，可选pdf/rtf/word											
 filename: 			指定要输出的文件名	
 kill：				是否保留过程中间产生的数据集，默认T，表示删除过程中产生的数据集	
 -----------------------------------------------------------------------------------------
@@ -56,7 +55,7 @@ p_wid				P值列宽度
 logfile             输出日志文件的路径，若为空，则不输出
 =================================================================================================
 */	
-%macro analysis_baseline(ds=,var=,grp=,use_type=T,def_type=,
+%macro analysis_baseline(ds=,var=,grp=,use_type=F,def_type=,
 						per_type=row,col_lab=,row_order=,
 						col_order=F,both_order_test=P,match=,
 						CA=,kill=T,filetype=,filename=,row_total=F,
@@ -141,6 +140,7 @@ run;
 	quit;
 	%if &miss=T %then %let grp_level=Miss&grp_level;
 %end;
+
 /*编译子宏*/
 /*%include "&saspath\decorate.sas";*/
 /*---------------------------------------decorate-------------------------------------*/
@@ -446,11 +446,11 @@ run;
 ods output close;
 data t_&q_id ;
 set t_&q_id ;
-drop varicances;
+drop variances;
 pvalue=put(probt,6.4);
 drop probt ;
 run;
-%data_merge(qal_&q_id,freq_table_&q_id,t_&q_id);
+%data_merge(qal_&q_id,desc_&q_id,t_&q_id);
 %mend;
 /*方差分析*/
 %macro ftest();
@@ -486,8 +486,12 @@ ods select wilcoxonTest ;
 %end;
 %else %do;
 %put &str 使用的是 Kruskal-Wallis 检验！;
-ods output KruskalWallisTest=&type._npar_&&&type._id (keep=prob );
-ods select KruskalWallisTest;
+%if %sysfunc(find(&sysvlong,M6)) %then
+ods output wilcoxonTest=&type._npar_&&&type._id (keep=Prob2 );
+%else 
+ods output wilcoxonTest=&type._npar_&&&type._id (keep=cvalue1);;
+ods select wilcoxonTest ;
+%end;
 %end;
 run;
 ods output close;
@@ -549,12 +553,12 @@ quit;
 		quit;
 		ods output close;
 		proc sql noprint;
-		select count(*) into :n_h from hov_&q_id where probf<0.05;
+		select count(probf) into :n_h from hov_&q_id where probf<0.05;
 		quit;
-		%if &n_h = 0 and &n_level_grp =2 %then %ttest(equal=T) ;
-		%else %if &n_h=0 and &n_level_grp > 2 %then %f_test();
-		%else %if &n_level_grp=2 %then %ttest(equal=F);
-		%else %if &n_level_grp>2 %then  %npar(q) ;
+		%if &n_h = 0 and &n_level_grp =2 %then %t_test(equal=T) ;
+		%else %if &n_h = 0 and &n_level_grp > 2 %then %ftest();
+		%else %if &n_h >0 and &n_level_grp=2 %then %t_test(equal=F);
+		%else %if &n_h >0 and &n_level_grp>2 %then  %npar(q) ;
 	%end;
 %mend;
 /*-------------------------q_dudge-----------------------*/
@@ -709,8 +713,12 @@ quit;
 			col(i)="";
 			end;
 		drop i;
-		select;
-		%if &miss=T %then when(_name_="&str._NMiss") _name_="Missing";;
+		%if &miss=T %then %do;
+		select ;
+		when(_name_="&str._NMiss") _name_="Missing";
+		%end;%else %do;
+		select ;
+		%end;
 		when(_name_="NObs") _name_="N";
 		when(find(_name_,"minmax")) _name_="Min,Max";
 		when(find(_name_,"m_iqr"))_name_="Median(IQR)";
@@ -750,8 +758,12 @@ quit;
 		length _name_ $20 ;
 		set o_desc_&q_id;
 		rename col1=row_overall ;
+		%if &miss=T %then %do;
 		select ;
-		%if &miss=T %then when(_name_="&str._NMiss") _name_="Missing";;
+		when(_name_="&str._NMiss") _name_="Missing";
+		%end;%else %do;
+		select ;
+		%end;
 		when (_name_="&str._N") _name_="N";
 		when (find(_name_,"minmax")) _name_="Min,Max";
 		when (find(_name_,"m_iqr"))_name_="Median(IQR)";
