@@ -189,7 +189,7 @@ ods &filetype close;
 %macro kill();
 proc datasets mt=data;
 %if %sysfunc(countw(&ds,.))=2 %then save final;
-%else save final &ds; ;
+%else save final &ds ; ;
 quit;
 %mend;
 /*------------------------------------decorate--------------------------------*/
@@ -301,8 +301,8 @@ run;
 				%end;
 			%else %do;
 			/*如果最小理论频数大于5 并且 总频数大于40，pearson检验*/
-			%if &min_expect >=5 and &total >40 %then %chisq(adj=F);
-			 	%else %if  &min_expect>=1 and &total>40 %then %chisq(adj=T);
+			%if %sysevalf(&min_expect > 5 and &total  >= 40 ) %then %chisq(adj=F);
+			 	%else %if  %sysevalf(&min_expect>=1 and &total>40) %then %chisq(adj=T);
 				%else %fisher();
 			%end;
 		%end;
@@ -387,22 +387,21 @@ proc npar1way data=&ds wilcoxon;
 class &grp ;
 var &str ;
 %if &n_level_grp=2 %then %do;
-%put &str 使用的是Wilcoxon检验！;
-%if %sysfunc(find(&sysvlong,M6)) %then
-ods output wilcoxonTest=&type._npar_&&&type._id (keep=Prob2 );
-%else 
-ods output wilcoxonTest=&type._npar_&&&type._id (keep=cvalue1);;
-ods select wilcoxonTest ;
-%end;
+	%put &str 使用的是Wilcoxon检验！;
+	%if %sysfunc(find(&sysvlong,M6)) %then
+		ods output wilcoxonTest=&type._npar_&&&type._id (keep=Prob2 );
+	%else 
+		ods output wilcoxonTest=&type._npar_&&&type._id (keep=cvalue1);;
+		ods select wilcoxonTest ;
+	%end;
 %else %do;
-%put &str 使用的是 Kruskal-Wallis 检验！;
-%if %sysfunc(find(&sysvlong,M6)) %then
-ods output wilcoxonTest=&type._npar_&&&type._id (keep=Prob2 );
-%else 
-ods output wilcoxonTest=&type._npar_&&&type._id (keep=cvalue1);;
-ods select wilcoxonTest ;
-%end;
-%end;
+	%put &str 使用的是 Kruskal-Wallis 检验！;
+	%if %sysfunc(find(&sysvlong,M6)) %then
+		ods output wilcoxonTest=&type._npar_&&&type._id (keep=Prob2 );
+	%else 
+		ods output wilcoxonTest=&type._npar_&&&type._id (keep=cvalue1);;
+		ods select wilcoxonTest ;
+	%end;
 run;
 ods output close;
 %if &n_level_grp=2 %then %do;
@@ -499,6 +498,7 @@ quit;
 	select distinct(&str), count(distinct &str) into :str_level separated by "|", :n_level_str
 		from &ds ;
 	/*	获取最小期望频数和总例数*/
+	%global min_expect total;
 	select min(Expected),max(Frequency) into :min_expect,:total from Temp_freq_&cat_id;
 	quit;
 	/*	整理基础频数表*/
@@ -515,7 +515,7 @@ quit;
 	run;
 	proc transpose data=ll_&cat_id out=ll_&cat_id (where=(col1 ne "") drop=_name_ );
 	by &str ;
-	var n_row_per;
+	var n_&per_type._per;
 	copy table ;
 	run;
 	proc sql;
@@ -722,6 +722,7 @@ quit;
 		%put ;
 %end;
 %mend get_baseline;
+
 %macro analysis_baseline(ds=,var=,grp=,use_type=F,def_type=,
 						per_type=row,col_lab=,row_order=,
 						col_order=F,both_order_test=P,match=,
@@ -730,8 +731,8 @@ quit;
 						alpha=0.05,row_lab=变量,font=Arial,
 						col_align=right,size=12pt,color=black,norm_p=0.05,
 						logfile=);
-options source notes mprint ;
-/*options nomprint nosource nonotes;*/
+/*options source notes mprint ;*/
+options nomprint nosource nonotes;
 /*清除以前的日志和结果页面*/
 dm log"clear" continue;
 dm odsresults 'clear' continue;
