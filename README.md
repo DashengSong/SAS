@@ -1,5 +1,5 @@
 # SAS
-本仓库是一些自己制作的SAS宏！
+本仓库是一些自己制作的SAS宏
 ## 基线制作宏：
   + [analysis_baseline](analysis_baseline.sas)  
     进行基线分析 
