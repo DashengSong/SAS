@@ -15,5 +15,7 @@
     筛选缺失值信息  
   + [get_outlier](get_outlier.sas)  
     筛选异常值信息  
+## 计算样本量  
+  + [get_sample_size](get_sample_size.sas)
     
  
