@@ -1,0 +1,35 @@
+libname dirs "C:\Users\b3801\Desktop\files";
+%macro read_excel(dirpath,lib);
+	%let filrf=mydir;
+	%let rc=%sysfunc(filename(filrf,&dirpath));
+	%let did=%sysfunc(dopen(&filrf));
+	%let memcount=%sysfunc(dnum(&did));
+	%do i=1 %to &memcount;
+		%let lstname=%sysfunc(dread(&did,&i));
+		%let ftype=%scan(&lstname,-1,.);
+		%if &ftype=xlsx or &ftype=xls %then %do;
+			libname f_excel excel "&dirpath.\&lstname";
+			proc sql noprint;
+				select memname into :list_sht separated by "|"
+						from sashelp.vstabvw where libname="F_EXCEL";
+			quit;
+			libname f_excel ;
+			%let n_sht=%sysfunc(countw(&list_sht,|));
+			%put &lstname ¹²ÓÐ &n_sht ¸öSheet!;
+			%do j=1 %to &n_sht;
+				%let sht=%scan(&list_sht,&j,|);
+				%put FILENAME: &dirpath.\&lstname;
+				%let cur_sht=%sysfunc(tranwrd(&sht,$,));
+				%put SHEET: &cur_sht;
+				filename cur_file "&dirpath.\&lstname" encoding="gbk";
+				proc import datafile=cur_file out=&lib..data_&i._&j dbms=xlsx replace;
+				datarow=2;
+				sheet="&cur_sht";
+				run;
+			%end;
+		%end;
+	%end;
+	%let rc=%sysfunc(dclose(&did));
+%mend;
+
+%read_excel(D:\WeChat\WeChat Files\wxid_twqk0xz2mgkt21\FileStorage\File\2021-06,dirs);
